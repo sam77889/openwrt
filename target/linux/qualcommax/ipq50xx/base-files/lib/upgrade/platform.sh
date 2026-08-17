@@ -200,6 +200,10 @@ platform_do_upgrade() {
 	glinet,gl-b3000)
 		glinet_do_upgrade "$1"
 		;;
+	unicom,vs010)
+		CI_UBIPART="rootfs"
+		nand_do_upgrade "$1"
+		;;
 	linksys,mr5500|\
 	linksys,mx2000|\
 	linksys,mx5500|\

@@ -1,0 +1,41 @@
+#!/bin/sh
+# VS010 network layout:
+#   LAN = eth1 (QCA8337 DSA, lan1/lan2/lan3)
+#   WAN = eth0 (IPQ5018 built-in GE PHY)
+# Explicitly set in uci overlay as safety net for stale board.json state.
+
+. /lib/functions.sh
+
+[ "$(board_name)" = "unicom,vs010" ] || exit 0
+
+fix_lan_device() {
+	local cfg="$1"
+	local name
+
+	config_get name "$cfg" name
+	[ "$name" = "br-lan" ] || return 0
+
+	found_br_lan=1
+	uci -q delete network."$cfg".ports
+	uci add_list network."$cfg".ports="lan1"
+	uci add_list network."$cfg".ports="lan2"
+	uci add_list network."$cfg".ports="lan3"
+}
+
+found_br_lan=0
+config_load network
+config_foreach fix_lan_device device
+
+if [ "$found_br_lan" -eq 0 ]; then
+	uci -q batch <<-EOF
+		add network device
+		set network.@device[-1].name='br-lan'
+		set network.@device[-1].type='bridge'
+		add_list network.@device[-1].ports='lan1'
+		add_list network.@device[-1].ports='lan2'
+		add_list network.@device[-1].ports='lan3'
+	EOF
+fi
+
+uci set network.wan.device="eth0"
+uci commit network

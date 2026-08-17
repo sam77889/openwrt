@@ -1,0 +1,11 @@
+#!/bin/sh
+# VS010 network layout:
+#   LAN = eth1 (QCA8337 DSA, lan1/lan2/lan3)
+#   WAN = eth0 (IPQ5018 built-in GE PHY)
+# Explicitly set in uci overlay as safety net for stale board.json state.
+uci set network.wan.device="eth0"
+uci -q delete network.@device[0].ports
+uci add_list network.@device[0].ports="lan1"
+uci add_list network.@device[0].ports="lan2"
+uci add_list network.@device[0].ports="lan3"
+uci commit network
